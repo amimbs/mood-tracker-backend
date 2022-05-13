@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
     res.json({ hello: 'hello world' })
 });
 
-app.post('/signup', (req, res) => {
+app.post('/signUp', (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     if (!email || !password || !firstName || !lastName) {
         //we need to make this an alert
@@ -45,6 +45,22 @@ app.post('/signup', (req, res) => {
             });
             return res.status(400).json({ error: errors })
         });
+    });
+});
+
+app.post('/signIn', async (req, res) => {
+    const { email, password } = req.body;
+    const foundUser = await models.User.findOne({ where: { email: email }, raw: true });
+    if (!foundUser) {
+        return res.json({ errors: 'invalid email' });
+    };
+    bcyrpt.compare(password, foundUser.password, (err, match) => {
+        if (match) {
+            req.User = foundUser
+            res.json({ success: true })
+        } else {
+            res.json({ error: 'Incorrect Password' })
+        };
     });
 });
 
