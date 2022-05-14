@@ -17,7 +17,7 @@ const cookieParser = require('cookie-parser');
 
 app.use(cookieParser());
 
-// middleware 
+// middleware this will be used for the dashboard
 const validateToken = (req, res, next) => {
     const cookie = req.cookies;
     console.log(cookie);
@@ -32,7 +32,7 @@ app.get('/', validateToken, (req, res) => {
     res.json({ hello: `hello ${req.body.user}` })
 });
 
-app.post('/signUp', validateToken, (req, res) => {
+app.post('/signUp', (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     if (!email || !password || !firstName || !lastName) {
         // need to make this an alert
@@ -46,11 +46,9 @@ app.post('/signUp', validateToken, (req, res) => {
             email: email,
             password: hash
         }).then((user) => {
-            console.log(user);
-            return res.status(200).json({ success: true })
+            return res.status(200).json({ success: true, user_id: user.id })
         }).catch(e => {
             let errors = [];
-            console.log(e)
             e.errors.forEach(error => {
                 errors.push(error.message)
             });
@@ -59,7 +57,7 @@ app.post('/signUp', validateToken, (req, res) => {
     });
 });
 
-app.post('/signIn', validateToken, async (req, res) => {
+app.post('/signIn', async (req, res) => {
     const { email, password } = req.body;
     const foundUser = await models.User.findOne({ where: { email: email }, raw: true });
     if (!foundUser) {
@@ -68,7 +66,7 @@ app.post('/signIn', validateToken, async (req, res) => {
     bcyrpt.compare(password, foundUser.password, (err, match) => {
         if (match) {
             req.User = foundUser
-            res.json({ success: true })
+            res.json({ success: true, user_id: foundUser.id })
         } else {
             res.json({ error: 'Incorrect Password' })
         };
