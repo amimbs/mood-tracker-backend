@@ -13,18 +13,29 @@ const user = require('./models/user')
 const bcyrpt = require('bcrypt');
 const saltRounds = 10;
 
-// const cookierParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 
-// app.user(cookierParser());
+app.use(cookieParser());
 
-app.get('/', (req, res) => {
-    res.json({ hello: 'hello world' })
+// middleware 
+const validateToken = (req, res, next) => {
+    const cookie = req.cookies;
+    console.log(cookie);
+    // Here we parse the token, get the token value (username, id etc),
+    // and then attach to req.body
+    req.body.user = 'andy'; 
+    next();
+};
+
+app.get('/', validateToken, (req, res) => {
+    res.cookie('username', 'Mimbs')
+    res.json({ hello: `hello ${req.body.user}` })
 });
 
-app.post('/signUp', (req, res) => {
+app.post('/signUp', validateToken, (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     if (!email || !password || !firstName || !lastName) {
-        //we need to make this an alert
+        // need to make this an alert
         return res.json({ error: 'Email, password, first and last name are required' });
     }
 
@@ -48,7 +59,7 @@ app.post('/signUp', (req, res) => {
     });
 });
 
-app.post('/signIn', async (req, res) => {
+app.post('/signIn', validateToken, async (req, res) => {
     const { email, password } = req.body;
     const foundUser = await models.User.findOne({ where: { email: email }, raw: true });
     if (!foundUser) {
