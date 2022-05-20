@@ -13,24 +13,20 @@ const user = require('./models/user')
 const bcyrpt = require('bcrypt');
 const saltRounds = 10;
 
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+// const session = require('express-session');
+const { response } = require('express');
 
-app.use(cookieParser());
-
-// middleware this will be used for the dashboard
-const validateToken = (req, res, next) => {
-    const cookie = req.cookies;
-    console.log(cookie);
-    // Here we parse the token, get the token value (username, id etc),
-    // and then attach to req.body
-    req.body.user = 'andy'; 
-    next();
-};
-
-app.get('/', validateToken, (req, res) => {
-    res.cookie('username', 'Mimbs')
-    res.json({ hello: `hello ${req.body.user}` })
-});
+// app.use(cookieParser());
+// app.use(session({
+//     secret: 'thisisaBIGsectretBoi!',
+//     resave: true,
+//     saveUninitialized: true,
+//     cookie: {
+//         secure: false,
+//         maxAge: 60000 * 60
+//     }
+// }));
 
 app.post('/signUp', (req, res) => {
     const { firstName, lastName, email, password } = req.body;
@@ -65,13 +61,20 @@ app.post('/signIn', async (req, res) => {
     };
     bcyrpt.compare(password, foundUser.password, (err, match) => {
         if (match) {
-            req.User = foundUser
             res.json({ success: true, user_id: foundUser.id })
         } else {
             res.json({ error: 'Incorrect Password' })
         };
     });
 });
+
+app.get('/dashboard/:user_id', (req, res) => {
+    if (!req.params.user_id) {
+        res.json({error: 'you dont belong here'})
+        return;
+    }
+    res.json({succes: true})
+})
 
 app.listen(PORT, () => {
     console.log(`app started on ${PORT}`)
